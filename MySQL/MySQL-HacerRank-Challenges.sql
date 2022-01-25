@@ -29,21 +29,51 @@ SELECT SUM(POPULATION) FROM CITY WHERE DISTRICT = 'CALIFORNIA';
 SELECT AVG(POPULATION) FROM CITY WHERE DISTRICT = 'CALIFORNIA';
 SELECT ROUND(AVG(POPULATION), 0) FROM CITY;
 SELECT MAX(POPULATION) - MIN(POPULATION) FROM CITY;
+SELECT CEILING(AVG(Salary) - AVG(REPLACE(Salary, 0, ''))) FROM EMPLOYEES;
+SELECT ROUND(SUM(LAT_N), 4) FROM STATION WHERE LAT_N BETWEEN 38.7880 AND 137.2345;
 
-
-
-
+SELECT ROUND(ABS(MIN(LAT_N)-MAX(LAT_N))+ABS(MIN(LONG_W)-MAX(LONG_W)), 4) FROM STATION; --Manhattan distance
+SELECT ROUND(SQRT(POWER(MIN(LAT_N)-MAX(LAT_N), 2)+POWER(MIN(LONG_W)-MAX(LONG_W), 2)), 4) FROM STATION; --Euclidean distance
 
 
 /* 3. Intermediate Queries: */
 SELECT CONCAT(Name, '(', LEFT(Occupation,1), ')' )
 FROM OCCUPATIONS
-ORDER BY Name ASC
-SELECT CONCAT("There are a total of ", COUNT(Occupation), " ", LOWER(Occupation), "s.") FROM OCCUPATIONS
+ORDER BY Name ASC;
+
+SELECT CONCAT("There are a total of ", COUNT(Occupation), " ", LOWER(Occupation), "s.")
+FROM OCCUPATIONS
 GROUP BY Occupation
 ORDER BY COUNT(Occupation), Occupation ASC;
 
-/* 3. Case or Conditionals: */
+SELECT (salary * months) AS earnings, COUNT(*) -- returns the number of rows in a specified table
+FROM Employee 
+GROUP BY 1  -- means group by first column from SELECT 
+ORDER BY earnings DESC -- same as ORDER BY 1 DESC
+LIMIT 1;
+
+
+
+/* 3.1 Sub Queries: */
+SELECT other.maximum AS o, COUNT(employee_id)
+FROM Employee,
+    (
+    SELECT MAX(months * salary) AS maximum
+    FROM Employee
+    ) AS other
+WHERE (months*salary) = other.maximum
+GROUP BY other.maximum
+
+SELECT (CASE 
+            WHEN P IS NULL THEN CONCAT(N, ' Root')
+            WHEN N IN (SELECT DISTINCT P FROM BST) THEN CONCAT(N, ' Inner')
+            ELSE CONCAT(N, ' Leaf')
+        END) AS Node_Type
+FROM BST
+ORDER BY N ASC;
+
+
+/* 4. Case or Conditionals: */
 SELECT
  (CASE
         WHEN A+B <= C OR B+C <= A OR A+C <= B THEN "Not A Triangle"
@@ -53,7 +83,8 @@ SELECT
     END) AS Triangle_Type
 FROM triangles;
 
-/* 4. Joins: */
+
+/* 5. Joins: */
 SELECT SUM(c.POPULATION) 
 FROM CITY AS c
 JOIN COUNTRY AS p
@@ -87,3 +118,38 @@ WHERE s.score = d.score AND ch.difficulty_level = d.difficulty_level
 GROUP BY hacker_id, h.name
     HAVING COUNT(h.hacker_id) > 1 
 ORDER BY COUNT(h.hacker_id) DESC, h.hacker_id ASC;
+
+
+SELECT c.company_code, MAX(c.founder), COUNT(DISTINCT l.lead_manager_code), COUNT(DISTINCT s.senior_manager_code), COUNT(DISTINCT m.manager_code), COUNT(DISTINCT e.employee_code)
+FROM Company AS c
+    JOIN Lead_Manager AS l
+        ON c.company_code = l.company_code
+    JOIN Senior_Manager AS s
+        ON c.company_code = s.company_code
+    JOIN Manager as m
+        ON c.company_code = m.company_code
+    JOIN Employee as e
+        ON c.company_code = e.company_code
+GROUP BY c.company_code;
+ORDER BY c.company_code ASC;
+
+
+SELECT f1.X, f1.Y FROM Functions f1
+INNER JOIN Functions f2 ON f1.X=f2.Y AND f1.Y=f2.X
+GROUP BY f1.X, f1.Y
+HAVING COUNT(f1.X)>1 or f1.X<f1.Y
+ORDER BY f1.X;
+
+
+/* 6. Advanced Queries: */
+
+SELECT category, product_id, discount
+FROM (
+     SELECT category, product_id, discount
+     ROW_NUMBER() OVER(PARTITION BY category
+                       ORDER BY discount DESC, product_id ASC) AS rn
+     FROM product) AS ranked
+ WHERE rn = 1
+ ORDER BY category;
+
+
