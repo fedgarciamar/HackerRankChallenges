@@ -197,5 +197,14 @@ FROM (
 SET @counter = 21;
 SELECT REPEAT('* ', @counter := @counter - 1) FROM INFORMATION_SCHEMA.TABLES;
 
+SET @counter = 21;
+SELECT rep.stars
+FROM(
+SELECT REPEAT('* ', @counter := @counter - 1) AS stars, @counter AS num
+FROM INFORMATION_SCHEMA.TABLES
+) AS rep
+WHERE rep.stars <> ''
+ORDER BY rep.num ASC;
+
 
 
