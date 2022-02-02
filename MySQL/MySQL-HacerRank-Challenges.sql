@@ -73,6 +73,16 @@ FROM BST
 ORDER BY N ASC;
 
 
+SELECT Start_Date, MIN(End_Date)
+FROM 
+    (SELECT Start_Date FROM Projects WHERE Start_Date NOT IN (SELECT End_Date FROM Projects)) AS a,
+    (SELECT End_Date FROM Projects WHERE End_Date NOT IN (SELECT Start_Date FROM Projects)) AS b
+WHERE Start_Date < End_Date
+GROUP BY Start_Date
+ORDER BY DATEDIFF(Start_Date, MIN(End_Date)) DESC, Start_Date;
+
+
+
 /* 4. Case or Conditionals: */
 SELECT
  (CASE
@@ -120,6 +130,22 @@ GROUP BY hacker_id, h.name
 ORDER BY COUNT(h.hacker_id) DESC, h.hacker_id ASC;
 
 
+SELECT h.hacker_id, h.name, ready.total_score
+FROM(
+    SELECT hacker_id, SUM(maximum_scores) AS total_score
+    FROM(
+        SELECT hacker_id, challenge_id, MAX(score) as maximum_scores
+        FROM Submissions
+        GROUP BY hacker_id, challenge_id
+        ) AS m
+    GROUP BY hacker_id
+    ) AS ready
+    JOIN Hackers AS h
+    ON ready.hacker_id = h.hacker_id
+WHERE ready.total_score <> 0
+ORDER BY total_score DESC, h.hacker_id ASC;
+
+
 SELECT c.company_code, MAX(c.founder), COUNT(DISTINCT l.lead_manager_code), COUNT(DISTINCT s.senior_manager_code), COUNT(DISTINCT m.manager_code), COUNT(DISTINCT e.employee_code)
 FROM Company AS c
     JOIN Lead_Manager AS l
@@ -141,6 +167,21 @@ HAVING COUNT(f1.X)>1 or f1.X<f1.Y
 ORDER BY f1.X;
 
 
+SELECT principal.Name
+FROM(
+    SELECT s.ID, Name, Salary, Friend_ID
+    FROM Students AS s
+        JOIN Packages AS p
+            ON s.ID = p.ID
+        JOIN Friends AS f
+            ON s.ID = f.ID
+    ) AS principal
+    JOIN Packages as sbf
+        ON principal.Friend_ID = sbf.ID
+WHERE sbf.Salary > principal.Salary
+ORDER BY sbf.Salary;
+
+
 /* 6. Advanced Queries: */
 
 SELECT category, product_id, discount
@@ -151,5 +192,10 @@ FROM (
      FROM product) AS ranked
  WHERE rn = 1
  ORDER BY category;
+ 
+ 
+SET @counter = 21;
+SELECT REPEAT('* ', @counter := @counter - 1) FROM INFORMATION_SCHEMA.TABLES;
+
 
 
